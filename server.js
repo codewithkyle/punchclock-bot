@@ -55,6 +55,9 @@ const puppeteer = require('puppeteer');
 (async () => {
     const httpServer = http.createServer(app);
     httpServer.listen(process.env.PORT);
+    if (!fs.existsSync(path.join(cwd, "blacklist.json"))){
+        fs.writeFileSync(path.join(cwd, "blacklist.json"), JSON.stringify([]));
+    }
     setTimeout(check, calculateTimeUntilNextPunchin());
 })();
 
