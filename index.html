@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Punchclock Bot</title>
+    <link href="https://unpkg.com/tailwindcss@^2/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+</head>
+<body style="background-color: #eee;">
+    <main></main>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script type="module">
+        import {html, render} from 'https://unpkg.com/lit-html?module';
+        
+        let dates = [];
+        const main = document.body.querySelector("main");
+        let changed = false;
+        
+        const handleInput = (e) => {
+            changed = true;
+            renderDates();
+        }
+        const handleClick = () => {
+            changed = true;
+            dates.push({
+                label: "New Date",
+                date: 1,
+            });
+            renderDates();
+        }
+        const deleteDate = (e) => {
+            const bttn = e.currentTarget ;
+            const index = parseInt(bttn.dataset.index);
+            dates.splice(index, 1);
+            changed = true;
+            renderDates();
+        }
+        const submit = (e) => {
+            const form = e.currentTarget ;
+            e.preventDefault();
+            if (form.checkValidity()){
+                const groups = Array.from(main.querySelectorAll(".js-group"));
+                const updatedDates = [];
+                groups.map(el => {
+                    const label = el.querySelector(".js-label");
+                    const date = el.querySelector(".js-date");
+                    updatedDates.push({
+                        label: label.value,
+                        date: date.value,
+                    });
+                });
+                dates = updatedDates;
+                fetch("/update-blacklist", {
+                    method: "POST",
+                    headers: new Headers({
+                        "Content-Type": "application/json",
+                    }),
+                    body: JSON.stringify({
+                        dates: dates
+                    })
+                })
+                .then(() => {
+                    changed = false;
+                    renderDates();
+                })
+                .catch(error => {
+                    console.error(error);
+                });
+            }
+        }
+        function renderDates(){
+            const view = html`
+                <form class="w-full block max-w-xl mx-auto px-4 pt-4 pb-4 bg-white shadow rounded-lg mt-8" @submit=${submit}>
+                    ${dates.length ? dates.map((holiday, index) => {
+                        return html`
+                            <div data-group="${index}" class="block w-full pb-4 pt-3 px-4 border border-solid border-gray-300 mb-4 js-group rounded-md relative">
+                                <input required class="js-label transition-all focus:ring-4 font-bold block mb-1 text-gray-700" @input=${handleInput} value="${holiday.label}">
+                                <input required class="js-date transition-all focus:ring-4 text-gray-700" @input=${handleInput} data-index="${index}" type="text" value="${holiday.date}">
+                                <button @click=${deleteDate} data-index="${index}" tooltip="Delete date" type="button" style="width:36px;height:36px;" class="text-red-500 flex items-center justify-center cursor-pointer absolute top-1 right-2">
+                                    <svg style="width:14px;height:14px;" aria-hidden="true" focusable="false" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><path fill="currentColor" d="M296 432h16a8 8 0 0 0 8-8V152a8 8 0 0 0-8-8h-16a8 8 0 0 0-8 8v272a8 8 0 0 0 8 8zm-160 0h16a8 8 0 0 0 8-8V152a8 8 0 0 0-8-8h-16a8 8 0 0 0-8 8v272a8 8 0 0 0 8 8zM440 64H336l-33.6-44.8A48 48 0 0 0 264 0h-80a48 48 0 0 0-38.4 19.2L112 64H8a8 8 0 0 0-8 8v16a8 8 0 0 0 8 8h24v368a48 48 0 0 0 48 48h288a48 48 0 0 0 48-48V96h24a8 8 0 0 0 8-8V72a8 8 0 0 0-8-8zM171.2 38.4A16.1 16.1 0 0 1 184 32h80a16.1 16.1 0 0 1 12.8 6.4L296 64H152zM384 464a16 16 0 0 1-16 16H80a16 16 0 0 1-16-16V96h320zm-168-32h16a8 8 0 0 0 8-8V152a8 8 0 0 0-8-8h-16a8 8 0 0 0-8 8v272a8 8 0 0 0 8 8z"></path></svg>
+                                </button>
+                            </div>
+                        `;
+                    }) : html`<p class="text-center text-sm text-gray-700 pb-8 pt-4">Add dates to get started.</p>`}
+                    <div class="w-full grid grid-cols-2 gap-4">
+                        <button type="button" style="height:36px;" class="transition-all w-full bg-gray-200 text-gray-800 text-sm font-medium text-center rounded-md active:ring-4 hover:bg-gray-300" @click=${handleClick}>Add Date</button>
+                        <button type="submit" style="height:36px;" class="transition-all w-full ${changed ? "bg-green-700 text-white active:ring-4 hover:bg-green-600" : "bg-gray-100 text-gray-400 cursor-not-allowed"} text-sm font-medium text-center rounded-md" .disabled=${!changed}>Save Changes</button>
+                    </div>
+                </form>
+            `;
+            render(view, main);
+            for (let i = 0; i < dates.length; i++){
+                flatpickr(`input[data-index="${i}"]`, {
+                    dateFormat: "m/d/Y"
+                });
+            }
+            const newDate = main.querySelector('input[value="New Date"]');
+            if (newDate){
+                newDate.focus();
+            }
+        }
+
+        (async ()=>{
+            const request = await fetch("/blacklist.json", {
+                credentials: "include",
+                method: "GET",
+                headers: new Headers({
+                    Accept: "application/json",
+                })
+            });
+            dates = await request.json();
+            renderDates();
+        })();
+    </script>
+</body>
+</html>
