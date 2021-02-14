@@ -57,8 +57,17 @@ const puppeteer = require('puppeteer');
     httpServer.listen(process.env.PORT);
     const minutes = dayjs().minute();
     const seconds = dayjs().second();
-    const millisecondsTillNextHour = (((60 - minutes) * 60) - seconds) * 1000;
-    setTimeout(check, millisecondsTillNextHour);
+    const hour = dayjs().hour();
+    let millisecondsTillNextCheck;
+    if (hour < 8){
+        const diffHours = 8 - hour;
+        millisecondsTillNextCheck = hoursToMilliseconds(diffHours) - (seconds * 1000) - (minutes * 60 * 1000);
+    } else {
+        const hoursLeftInDay = 24 - hour;
+        const diffHours = 8 + hoursLeftInDay;
+        millisecondsTillNextCheck = hoursToMilliseconds(diffHours) - (seconds * 1000) - (minutes * 60 * 1000);
+    }
+    setTimeout(check, millisecondsTillNextCheck);
 })();
 
 async function handleLogin(page){
@@ -106,7 +115,7 @@ async function punchIn(){
         await handleLogin(page);
         await handleUserOverload(page);
         await page.goto(`https://mis.page.works/epace/company:public/object/Employee/dcActions/${process.env.EMPLOYEE_ID}`, { waitUntil: 'networkidle0' });
-        // await page.click('input[type="submit"][value="Sign In"]');
+        await page.click('input[type="submit"][value="Sign In"]');
         await browser.close();
         const data = {
             from: 'Punchclock Bot <noreply@example.com>',
@@ -115,7 +124,6 @@ async function punchIn(){
             text: `You were punched in at ${dayjs().format("h:mma")} today. I'll contact you again in 8 hours after you've been punched out.`,
         };
         mg.messages().send(data);
-        console.log("All done!");
     } catch (e){
         const data = {
             from: 'Punchclock Bot <noreply@example.com>',
@@ -123,9 +131,7 @@ async function punchIn(){
             subject: "Oh dear, oh my. Something has gone terribly wrong!",
             text: e.toString(),
         };
-        mg.messages().send(data, function (error, body) {
-            console.log(body);
-        });
+        mg.messages().send(data);
     }
 }
 
@@ -135,7 +141,7 @@ async function punchOut(){
         await handleLogin(page);
         await handleUserOverload(page);
         await page.goto(`https://mis.page.works/epace/company:public/object/Employee/dcActions/${process.env.EMPLOYEE_ID}`, { waitUntil: 'networkidle0' });
-        // await page.click('input[type="submit"][value="Sign Out"]');
+        await page.click('input[type="submit"][value="Sign Out"]');
         await browser.close();
         const data = {
             from: 'Punchclock Bot <noreply@example.com>',
@@ -155,7 +161,7 @@ async function punchOut(){
     }
 }
 
-function holiday(){
+function checkForHoliday(){
     const day = dayjs().date();
     const month = dayjs().month();
     const blacklistedDates = JSON.parse(fs.readFileSync(path.join(cwd, "blacklist.json")).toString());
@@ -177,24 +183,26 @@ function holiday(){
     return isHoliday;
 }
 
+function hoursToMilliseconds(hour){
+    return hour * 60 * 60 * 1000;
+}
+
 function check(){
-    const dayOfWeek = dayjs().day();
-    // If not weekend
-    if (dayOfWeek !== 0 && dayOfWeek !== 6 && !holiday()){
+    if (!checkForHoliday()){
         const hour = dayjs().hour();
-        if (hour === 8){
-            punchIn();
-        } else if (hour === 4){
-            punchOut();
+        const dayOfWeek = dayjs().day();
+        if (dayOfWeek !== 0 && dayOfWeek !== 6){
+            if (hour === 8){
+                punchIn();
+                setTimeout(check, hoursToMilliseconds(8));
+            } else if (hour === 16){
+                punchOut();
+                setTimeout(check, hoursToMilliseconds(16));
+            }
+        } else {
+            setTimeout(check, hoursToMilliseconds(24));
         }
     } else {
-        const data = {
-            from: 'Punchclock Bot <noreply@example.com>',
-            to: process.env.EMAIL_ADDRESS,
-            subject: `Enjoy Weekend`,
-            text: `Hooray! You don't have to work today! This email was generated at ${dayjs().format("h:mma")} and today is${holiday() ? " " : " not "}a holiday.`,
-        };
-        mg.messages().send(data);
+        setTimeout(check, hoursToMilliseconds(24));
     }
-    setTimeout(check, 3600000);
 }
