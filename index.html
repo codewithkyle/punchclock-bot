@@ -77,6 +77,7 @@
             cursor: pointer;
             user-select: none;
             transition: all 75ms var(--ease-in-out);
+            position: relative;
         }
         snackbar-component snackbar-actions .close:hover::before {
             transform: scale(1);
@@ -177,6 +178,7 @@
                     snackbar({
                         message: "Your changes have been saved",
                         closeable: true,
+                        force: true,
                     });
                     renderDates();
                 })
