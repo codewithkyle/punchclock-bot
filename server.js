@@ -59,7 +59,7 @@ app.post("/update-blacklist", async (req, res) => {
 const puppeteer = require('puppeteer');
 (async () => {
     const httpServer = http.createServer(app);
-    httpServer.listen(8080);
+    httpServer.listen(process.env.PORT);
     const minutes = dayjs().minute();
     const seconds = dayjs().second();
     const millisecondsTillNextHour = (((60 - minutes) * 60) - seconds) * 1000;
