@@ -192,7 +192,7 @@ function check(){
             from: 'Punchclock Bot <noreply@example.com>',
             to: process.env.EMAIL_ADDRESS,
             subject: `Enjoy Weekend`,
-            text: `Hooray! You don't have to work today! This email was generated at ${dayjs().format("h:mma")}`,
+            text: `Hooray! You don't have to work today! This email was generated at ${dayjs().format("h:mma")} and today is${holiday() ? " " : " not "}a holiday.`,
         };
         mg.messages().send(data);
     }
