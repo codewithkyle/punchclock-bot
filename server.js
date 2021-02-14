@@ -58,7 +58,6 @@ const puppeteer = require('puppeteer');
     const minutes = dayjs().minute();
     const seconds = dayjs().second();
     const millisecondsTillNextHour = (((60 - minutes) * 60) - seconds) * 1000;
-    console.log(dayjs().date(), dayjs().hour());
     setTimeout(check, millisecondsTillNextHour);
 })();
 
