@@ -55,19 +55,7 @@ const puppeteer = require('puppeteer');
 (async () => {
     const httpServer = http.createServer(app);
     httpServer.listen(process.env.PORT);
-    const minutes = dayjs().minute();
-    const seconds = dayjs().second();
-    const hour = dayjs().hour();
-    let millisecondsTillNextCheck;
-    if (hour < 8){
-        const diffHours = 8 - hour;
-        millisecondsTillNextCheck = hoursToMilliseconds(diffHours) - (seconds * 1000) - (minutes * 60 * 1000);
-    } else {
-        const hoursLeftInDay = 24 - hour;
-        const diffHours = 8 + hoursLeftInDay;
-        millisecondsTillNextCheck = hoursToMilliseconds(diffHours) - (seconds * 1000) - (minutes * 60 * 1000);
-    }
-    setTimeout(check, millisecondsTillNextCheck);
+    setTimeout(check, calculateTimeUntilNextPunchin());
 })();
 
 async function handleLogin(page){
@@ -187,17 +175,33 @@ function hoursToMilliseconds(hour){
     return hour * 60 * 60 * 1000;
 }
 
-function check(){
+function calculateTimeUntilNextPunchin(){
+    const minutes = dayjs().minute();
+    const seconds = dayjs().second();
+    const hour = dayjs().hour();
+    let millisecondsTillNextCheck;
+    if (hour < 8){
+        const diffHours = 8 - hour;
+        millisecondsTillNextCheck = hoursToMilliseconds(diffHours) - (seconds * 1000) - (minutes * 60 * 1000);
+    } else {
+        const hoursLeftInDay = 24 - hour;
+        const diffHours = 8 + hoursLeftInDay;
+        millisecondsTillNextCheck = hoursToMilliseconds(diffHours) - (seconds * 1000) - (minutes * 60 * 1000);
+    }
+    return millisecondsTillNextCheck;
+}
+
+async function check(){
     if (!checkForHoliday()){
         const hour = dayjs().hour();
         const dayOfWeek = dayjs().day();
         if (dayOfWeek !== 0 && dayOfWeek !== 6){
             if (hour === 8){
-                punchIn();
+                await punchIn();
                 setTimeout(check, hoursToMilliseconds(8));
             } else if (hour === 16){
-                punchOut();
-                setTimeout(check, hoursToMilliseconds(16));
+                await punchOut();
+                setTimeout(check, calculateTimeUntilNextPunchin());
             }
         } else {
             setTimeout(check, hoursToMilliseconds(24));
