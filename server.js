@@ -91,7 +91,8 @@ async function goToSite(){
         defaultViewport: null,
         args: ['--no-sandbox', '--disable-setuid-sandbox']
     });
-    const page = await browser.newPage();
+    const context = await browser.createIncognitoBrowserContext();
+    const page = await context.newPage();
     await page.goto(`https://mis.page.works/epace/company:public/object/Employee/dcActions/${process.env.EMPLOYEE_ID}`, { waitUntil: 'networkidle0' });
     return {
         page: page,
@@ -105,20 +106,21 @@ async function punchIn(){
         await handleLogin(page);
         await handleUserOverload(page);
         await page.goto(`https://mis.page.works/epace/company:public/object/Employee/dcActions/${process.env.EMPLOYEE_ID}`, { waitUntil: 'networkidle0' });
-        await page.click('input[type="submit"][value="Sign In"]');
+        // await page.click('input[type="submit"][value="Sign In"]');
         await browser.close();
         const data = {
             from: 'Punchclock Bot <noreply@example.com>',
             to: process.env.EMAIL_ADDRESS,
-            subject: "Punchout Successful!",
-            text: "I did it! I punched you out today!",
+            subject: "Punch In Successful!",
+            text: `You were punched in at ${dayjs().format("h:mma")} today. I'll contact you again in 8 hours after you've been punched out.`,
         };
         mg.messages().send(data);
+        console.log("All done!");
     } catch (e){
         const data = {
             from: 'Punchclock Bot <noreply@example.com>',
             to: process.env.EMAIL_ADDRESS,
-            subject: "Something went terribly wrong!",
+            subject: "Oh dear, oh my. Something has gone terribly wrong!",
             text: e.toString(),
         };
         mg.messages().send(data, function (error, body) {
@@ -133,20 +135,20 @@ async function punchOut(){
         await handleLogin(page);
         await handleUserOverload(page);
         await page.goto(`https://mis.page.works/epace/company:public/object/Employee/dcActions/${process.env.EMPLOYEE_ID}`, { waitUntil: 'networkidle0' });
-        await page.click('input[type="submit"][value="Sign Out"]');
+        // await page.click('input[type="submit"][value="Sign Out"]');
         await browser.close();
         const data = {
             from: 'Punchclock Bot <noreply@example.com>',
             to: process.env.EMAIL_ADDRESS,
-            subject: "Punchout Successful!",
-            text: "I did it! I punched you out today!",
+            subject: "Punch Out Successful!",
+            text: `You were punched out at ${dayjs().format("h:mma")}! Enjoy the rest of your day.`,
         };
         mg.messages().send(data);
     } catch (e){
         const data = {
             from: 'Punchclock Bot <noreply@example.com>',
             to: process.env.EMAIL_ADDRESS,
-            subject: "Something went terribly wrong!",
+            subject: "Oh dear, oh my. Something has gone terribly wrong!",
             text: e.toString(),
         };
         mg.messages().send(data);
@@ -165,7 +167,7 @@ function holiday(){
             const data = {
                 from: 'Punchclock Bot <noreply@example.com>',
                 to: process.env.EMAIL_ADDRESS,
-                subject: `Enjoy Your ${blacklistedDates[i].lable}`,
+                subject: `Enjoy Your ${blacklistedDates[i].label}`,
                 text: "Hooray! You don't have to work today!",
             };
             mg.messages().send(data);
@@ -185,6 +187,14 @@ function check(){
         } else if (hour === 4){
             punchOut();
         }
+    } else {
+        const data = {
+            from: 'Punchclock Bot <noreply@example.com>',
+            to: process.env.EMAIL_ADDRESS,
+            subject: `Enjoy Weekend`,
+            text: `Hooray! You don't have to work today! This email was generated at ${dayjs().format("h:mma")}`,
+        };
+        mg.messages().send(data);
     }
     setTimeout(check, 3600000);
 }
