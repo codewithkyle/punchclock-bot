@@ -93,7 +93,7 @@ async function goToSite(){
     });
     const context = await browser.createIncognitoBrowserContext();
     const page = await context.newPage();
-    await page.goto(`https://mis.page.works/epace/company:public/object/Employee/dcActions/${process.env.EMPLOYEE_ID}`, { waitUntil: 'networkidle0' });
+    await page.goto(process.env.URL, { waitUntil: 'networkidle0' });
     return {
         page: page,
         browser: browser
@@ -105,7 +105,7 @@ async function punchIn(){
         const { page, browser } = await goToSite();
         await handleLogin(page);
         await handleUserOverload(page);
-        await page.goto(`https://mis.page.works/epace/company:public/object/Employee/dcActions/${process.env.EMPLOYEE_ID}`, { waitUntil: 'networkidle0' });
+        await page.goto(process.env.URL, { waitUntil: 'networkidle0' });
         await page.click('input[type="submit"][value="Sign In"]');
         await browser.close();
         const data = {
@@ -131,7 +131,7 @@ async function punchOut(){
         const { page, browser } = await goToSite();
         await handleLogin(page);
         await handleUserOverload(page);
-        await page.goto(`https://mis.page.works/epace/company:public/object/Employee/dcActions/${process.env.EMPLOYEE_ID}`, { waitUntil: 'networkidle0' });
+        await page.goto(process.env.URL, { waitUntil: 'networkidle0' });
         await page.click('input[type="submit"][value="Sign Out"]');
         await browser.close();
         const data = {
@@ -207,9 +207,9 @@ async function check(){
                 setTimeout(check, calculateTimeUntilNextPunchin());
             }
         } else {
-            setTimeout(check, hoursToMilliseconds(24));
+            setTimeout(check, calculateTimeUntilNextPunchin());
         }
     } else {
-        setTimeout(check, hoursToMilliseconds(24));
+        setTimeout(check, calculateTimeUntilNextPunchin());
     }
 }
