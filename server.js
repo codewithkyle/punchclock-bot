@@ -106,7 +106,7 @@ async function punchIn(){
         await handleLogin(page);
         await handleUserOverload(page);
         await page.goto(process.env.URL, { waitUntil: 'networkidle0' });
-        await page.click('input[type="submit"][value="Sign In"]');
+        await page.click('a[data-name="signIn"]');
         await browser.close();
         const data = {
             from: 'Punchclock Bot <noreply@example.com>',
@@ -132,7 +132,7 @@ async function punchOut(){
         await handleLogin(page);
         await handleUserOverload(page);
         await page.goto(process.env.URL, { waitUntil: 'networkidle0' });
-        await page.click('input[type="submit"][value="Sign Out"]');
+        await page.click('a[data-name="signOut"]');
         await browser.close();
         const data = {
             from: 'Punchclock Bot <noreply@example.com>',
