@@ -105,7 +105,6 @@ async function punchIn(){
         const { page, browser } = await goToSite();
         await handleLogin(page);
         await handleUserOverload(page);
-        await page.goto(process.env.URL, { waitUntil: 'networkidle0' });
         await page.click('a[data-name="signIn"]');
         await browser.close();
         const data = {
@@ -131,7 +130,6 @@ async function punchOut(){
         const { page, browser } = await goToSite();
         await handleLogin(page);
         await handleUserOverload(page);
-        await page.goto(process.env.URL, { waitUntil: 'networkidle0' });
         await page.click('a[data-name="signOut"]');
         await browser.close();
         const data = {
