@@ -105,6 +105,13 @@ async function punchIn(){
         const { page, browser } = await goToSite();
         await handleLogin(page);
         await handleUserOverload(page);
+        await page.goto(process.env.URL, { waitUntil: 'networkidle0' });
+        const button = await page.$('a[data-name="signIn"]');
+        if (!button){
+            await page.goto(process.env.URL, { waitUntil: 'networkidle0' });
+            await handleLogin(page);
+            await handleUserOverload(page);
+        }
         await page.click('a[data-name="signIn"]');
         await browser.close();
         const data = {
@@ -115,11 +122,19 @@ async function punchIn(){
         };
         mg.messages().send(data);
     } catch (e){
+        await page.setViewport({ width: 1024, height: 800 });
+        await page.screenshot({
+            path: "./screenshot.jpg",
+            type: "jpeg",
+            fullPage: true
+        });
+        await browser.close();
         const data = {
             from: 'Punchclock Bot <noreply@example.com>',
             to: process.env.EMAIL_ADDRESS,
             subject: "Oh dear, oh my. Something has gone terribly wrong!",
             text: e.toString(),
+            atachment: path.join(__dirname, "screenshot.jpg")
         };
         mg.messages().send(data);
     }
@@ -130,6 +145,12 @@ async function punchOut(){
         const { page, browser } = await goToSite();
         await handleLogin(page);
         await handleUserOverload(page);
+        await page.goto(process.env.URL, { waitUntil: 'networkidle0' });
+        const button = await page.$('a[data-name="signOut"]');
+        if (!button){
+            await handleLogin(page);
+            await handleUserOverload(page);
+        }
         await page.click('a[data-name="signOut"]');
         await browser.close();
         const data = {
@@ -140,6 +161,13 @@ async function punchOut(){
         };
         mg.messages().send(data);
     } catch (e){
+        await page.setViewport({ width: 1024, height: 800 });
+        await page.screenshot({
+            path: "./screenshot.jpg",
+            type: "jpeg",
+            fullPage: true
+        });
+        await browser.close();
         const data = {
             from: 'Punchclock Bot <noreply@example.com>',
             to: process.env.EMAIL_ADDRESS,
