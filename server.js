@@ -101,8 +101,8 @@ async function goToSite(){
 }
 
 async function punchIn(){
+    const { page, browser } = await goToSite();
     try{
-        const { page, browser } = await goToSite();
         await handleLogin(page);
         await handleUserOverload(page);
         await page.goto(process.env.URL, { waitUntil: 'networkidle0' });
@@ -124,7 +124,7 @@ async function punchIn(){
     } catch (e){
         await page.setViewport({ width: 1024, height: 800 });
         await page.screenshot({
-            path: "./screenshot.jpg",
+            path: path.join(__dirname, "screenshot.jpg"),
             type: "jpeg",
             fullPage: true
         });
@@ -134,15 +134,15 @@ async function punchIn(){
             to: process.env.EMAIL_ADDRESS,
             subject: "Oh dear, oh my. Something has gone terribly wrong!",
             text: e.toString(),
-            atachment: path.join(__dirname, "screenshot.jpg")
+            atachment: path.join(__dirname, "screenshot.jpg"),
         };
         mg.messages().send(data);
     }
 }
 
 async function punchOut(){
+    const { page, browser } = await goToSite();
     try {
-        const { page, browser } = await goToSite();
         await handleLogin(page);
         await handleUserOverload(page);
         await page.goto(process.env.URL, { waitUntil: 'networkidle0' });
@@ -163,7 +163,7 @@ async function punchOut(){
     } catch (e){
         await page.setViewport({ width: 1024, height: 800 });
         await page.screenshot({
-            path: "./screenshot.jpg",
+            path: path.join(__dirname, "screenshot.jpg"),
             type: "jpeg",
             fullPage: true
         });
@@ -173,6 +173,7 @@ async function punchOut(){
             to: process.env.EMAIL_ADDRESS,
             subject: "Oh dear, oh my. Something has gone terribly wrong!",
             text: e.toString(),
+            atachment: path.join(__dirname, "screenshot.jpg"),
         };
         mg.messages().send(data);
     }
