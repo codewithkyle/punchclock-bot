@@ -65,7 +65,7 @@ async function handleLogin(page){
     const loginForm = await page.$('form[action="do-login"]');
     if (loginForm){
         await page.type('input[name="j_username"]', process.env.LOGIN_USERNAME);
-        await page.type('input[name="j_password"]', process.env.LOGIN_PASSWORD);
+        await page.type('input#password[type="password"]', process.env.LOGIN_PASSWORD);
         await Promise.all([
             page.click('input[type="submit"][name="Login"]'),
             page.waitForNavigation({ waitUntil: 'networkidle0' }),
