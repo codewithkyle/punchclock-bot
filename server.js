@@ -205,6 +205,15 @@ function hoursToMilliseconds(hour){
     return hour * 60 * 60 * 1000;
 }
 
+function randomIntFromInterval(min, max) {
+    return Math.floor(Math.random() * (max - min + 1) + min);
+}
+
+function fudger(range){
+    const minutes = randomIntFromInterval(-range, range);
+    return minutes * 60 * 1000;
+}
+
 function calculateTimeUntilNextPunchin(){
     const minutes = dayjs().minute();
     const seconds = dayjs().second();
@@ -218,6 +227,7 @@ function calculateTimeUntilNextPunchin(){
         const diffHours = 8 + hoursLeftInDay;
         millisecondsTillNextCheck = hoursToMilliseconds(diffHours) - (seconds * 1000) - (minutes * 60 * 1000);
     }
+    millisecondsTillNextCheck += fudger(15);
     return millisecondsTillNextCheck;
 }
 
@@ -228,7 +238,8 @@ async function check(){
         if (dayOfWeek !== 0 && dayOfWeek !== 6){
             if (hour === 8){
                 await punchIn();
-                setTimeout(check, hoursToMilliseconds(8));
+                const punchOutTime = hoursToMilliseconds(8) + fudger(30);
+                setTimeout(check, punchOutTime);
             } else if (hour === 16){
                 await punchOut();
                 setTimeout(check, calculateTimeUntilNextPunchin());
