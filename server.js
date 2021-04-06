@@ -62,8 +62,8 @@ const puppeteer = require('puppeteer');
     const data = {
         from: 'Punchclock Bot <noreply@example.com>',
         to: process.env.EMAIL_ADDRESS,
-        subject: "Punchin Scheduled",
-        text: `Your first punchin has been scheduled for ${dayjs(Date.now() + timeTillFirstPunchin).format("MM/DD/YYYY at h:mma")}.`,
+        subject: "Punch In Scheduled",
+        text: `Your first punch in has been scheduled for ${dayjs(Date.now() + timeTillFirstPunchin).format("MM/DD/YYYY h:mma")}.`,
     };
     mg.messages().send(data);
     setTimeout(check, timeTillFirstPunchin);
