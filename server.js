@@ -219,15 +219,15 @@ function calculateTimeUntilNextPunchin(){
     const seconds = dayjs().second();
     const hour = dayjs().hour();
     let millisecondsTillNextCheck;
-    if (hour < 8){
-        const diffHours = 8 - hour;
+    if (hour < 7){
+        const diffHours = 7 - hour;
         millisecondsTillNextCheck = hoursToMilliseconds(diffHours) - (seconds * 1000) - (minutes * 60 * 1000);
     } else {
         const hoursLeftInDay = 24 - hour;
-        const diffHours = 8 + hoursLeftInDay;
+        const diffHours = 7 + hoursLeftInDay;
         millisecondsTillNextCheck = hoursToMilliseconds(diffHours) - (seconds * 1000) - (minutes * 60 * 1000);
     }
-    millisecondsTillNextCheck += fudger(-15, 15);
+    millisecondsTillNextCheck += fudger(-30, 15);
     return millisecondsTillNextCheck;
 }
 
@@ -238,7 +238,7 @@ async function check(){
         if (dayOfWeek !== 0 && dayOfWeek !== 6){
             if (hour === 8){
                 await punchIn();
-                const punchOutTime = hoursToMilliseconds(8) + fudger(0, 45);
+                const punchOutTime = hoursToMilliseconds(8) + fudger(-15, 15);
                 setTimeout(check, punchOutTime);
             } else if (hour === 16){
                 await punchOut();
