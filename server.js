@@ -58,7 +58,15 @@ const puppeteer = require('puppeteer');
     if (!fs.existsSync(path.join(cwd, "blacklist.json"))){
         fs.writeFileSync(path.join(cwd, "blacklist.json"), JSON.stringify([]));
     }
-    setTimeout(check, calculateTimeUntilNextPunchin());
+    const timeTillFirstPunchin = calculateTimeUntilNextPunchin();
+    const data = {
+        from: 'Punchclock Bot <noreply@example.com>',
+        to: process.env.EMAIL_ADDRESS,
+        subject: "Punchin Scheduled",
+        text: `Your first punchin has been scheduled for ${dayjs(Date.now() + timeTillFirstPunchin).format("MM/DD/YYYY at h:mma")}.`,
+    };
+    mg.messages().send(data);
+    setTimeout(check, timeTillFirstPunchin);
 })();
 
 async function handleLogin(page){
@@ -236,11 +244,11 @@ async function check(){
         const hour = dayjs().hour();
         const dayOfWeek = dayjs().day();
         if (dayOfWeek !== 0 && dayOfWeek !== 6){
-            if (hour === 8){
+            if (hour < 12){
                 await punchIn();
                 const punchOutTime = hoursToMilliseconds(8) + fudger(-15, 15);
                 setTimeout(check, punchOutTime);
-            } else if (hour === 16){
+            } else {
                 await punchOut();
                 setTimeout(check, calculateTimeUntilNextPunchin());
             }
